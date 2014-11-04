@@ -52,8 +52,7 @@
 (defn send-message!
   "Create and send the message."
   [addresses]
-  (postal/send-message {:host "localhost" :port 1025}
-                       {:from "company-chat-roulette@getchef.com"
+  (postal/send-message {:from "company-chat-roulette@getchef.com"
                         :to addresses
                         :type "text/plain; charset=UTF-8"
                         :subject (str "Company Chat Roulette for " today)
