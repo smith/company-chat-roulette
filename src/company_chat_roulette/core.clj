@@ -10,34 +10,30 @@
 ;; Email addresses
 (def email-addresses (clojure.string/split (env :addresses) #","))
 
-(defn addresses->set
-  "The Set of email addresses to use. It must have an even number of items
-  because they are going to be split into pairs."
-  [addresses]
-  (set (if (even? (count email-addresses))
-              email-addresses
-              (conj email-addresses nil))))
+(defn format-pair
+  "Take a map of pairs and make them a nicely formatted list"
+  [[a b]]
+  (str (or a "nil")
+       " ⇆  "
+       (or b "nil")))
 
 (defn pairs
   "The set of addresses split into random pairs"
-  [a-set]
-  (apply array-map (shuffle a-set)))
+  [addrs]
+  (-> addrs
+      shuffle
+      (partition-all 2)
+      (map format-pair)))
 
 ;; Today's date
 (def today
- (.format (java.text.SimpleDateFormat. "yyyy-MM-dd") (new java.util.Date)))
-
-(defn format-pairs
-  "Take a map of pairs and make them a nicely formatted list"
-  [pairs]
-  (clojure.string/join "\n\n"
-    (map (fn [i] (str (or (first i) "nil") " ⇆ " (or (last i) "nil"))) pairs)))
+ (.format (java.text.SimpleDateFormat. "yyyy-MM-dd") (java.util.Date.)))
 
 (defn message-body
   "The body of the email to be sent"
   [pairs]
   (str "Hello!\n\nHere are today's matches for Company Chat Roulette:\n\n"
-       (format-pairs pairs)
+       (clojure.string/join "\n\n" pairs)
        "\n\n"
        "Find that person today and go to lunch with them or have a video\n"
        "chat. If you got 'nil' today, that means you didn't get a match.\n"
@@ -57,7 +53,7 @@
                         :type "text/plain; charset=UTF-8"
                         :subject (str "Company Chat Roulette for " today)
                         :Reply-To "smith@getchef.com"
-                        :body (message-body (pairs (addresses->set addresses)))}))
+                        :body (-> addresses pairs message-body)}))
 
 (defn -main
   "Main method of the program. Returns the status code from sending the mail
